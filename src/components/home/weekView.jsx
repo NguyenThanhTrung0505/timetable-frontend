@@ -1,4 +1,5 @@
 import React from "react";
+import { Modal, Button } from "react-bootstrap";
 import { startOfWeek, addDays, isSameDay, isToday, format } from "date-fns";
 import "./home.scss";
 import { useState } from "react";
@@ -8,23 +9,81 @@ import {
     FaAlignLeft,
     FaTag,
     FaRedo,
+    FaPencilAlt,
+    FaRegTrashAlt,
 } from "react-icons/fa";
-const WeekView = ({ currentDate, events, onSlotClick, currentTime }) => {
+import axios from "axios";
+const WeekView = ({
+    currentDate,
+    events,
+    onSlotClick,
+    currentTime,
+    onDeleteSuccess,
+    onEditClick,
+}) => {
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [eventToDelete, setEventToDelete] = useState(null);
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     const hours = Array.from({ length: 20 }, (_, i) => i + 5);
+    // Từ điển Danh mục
+    const CATEGORY_VIETSUB = {
+        work: "Công việc",
+        personal: "Cá nhân",
+        meeting: "Cuộc họp",
+        focus: "Tập trung",
+        wellness: "Lễ tiệc",
+    };
+
+    // Từ điển Lặp lại
+    const RECURRENCE_VIETSUB = {
+        none: "Không lặp lại",
+        daily: "Hằng ngày",
+        weekly: "Hằng tuần",
+        monthly: "Hằng tháng",
+        yearly: "Hằng năm",
+    };
     const getEventsForSlot = (date, hour) => {
         const slotStart = new Date(date);
         slotStart.setHours(hour, 0, 0, 0);
 
         const slotEnd = new Date(date);
         slotEnd.setHours(hour + 1, 0, 0, 0);
+
         return events.filter((event) => {
             const eventStart = new Date(event.start_date);
             const eventEnd = new Date(event.end_date);
-            const isOverlapping = eventStart < slotEnd && eventEnd > slotStart;
-            return isOverlapping;
+            if (eventStart >= slotEnd) return false;
+            if (event.recurrence === "none") {
+                return eventStart < slotEnd && eventEnd > slotStart;
+            }
+            const duration = eventEnd.getTime() - eventStart.getTime();
+            const projectedStart = new Date(slotStart);
+            projectedStart.setHours(
+                eventStart.getHours(),
+                eventStart.getMinutes(),
+                0,
+                0,
+            );
+            const projectedEnd = new Date(projectedStart.getTime() + duration);
+            const isOverlapping =
+                projectedStart < slotEnd && projectedEnd > slotStart;
+            if (!isOverlapping) return false;
+            if (event.recurrence === "daily") {
+                return true;
+            }
+            if (event.recurrence === "weekly") {
+                return eventStart.getDay() === slotStart.getDay();
+            }
+            if (
+                event.recurrence === "monthly" ||
+                event.recurrence === "yearly"
+            ) {
+                return eventStart.getDate() === slotStart.getDate();
+            }
+
+            return false;
         });
     };
 
@@ -34,27 +93,59 @@ const WeekView = ({ currentDate, events, onSlotClick, currentTime }) => {
         const h = currentTime.getHours();
         const m = currentTime.getMinutes();
         if (h < 5 || h >= 24) return null;
-        return (h - 5) * 90 + (m / 60) * 90;
+        return (h - 5) * 88 + (m / 60) * 88;
     };
 
     const linePos = getLinePosition();
     const handleClickEvent = (e, eventItem) => {
-        e.stopPropagation(); // Ngăn sự kiện click lan ra ô time-slot cha (tránh mở modal thêm mới)
+        e.stopPropagation();
         setSelectedEvent(eventItem);
+    };
+    const handleEditEvent = (e) => {
+        onEditClick(e);
+        setSelectedEvent(null);
+    };
+    const handleDelete = async () => {
+        try {
+            if (!eventToDelete) return;
+            const token = localStorage.getItem("myToken");
+            const response = await axios.delete(
+                `${import.meta.env.VITE_API_URL}/event/${eventToDelete}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
+            );
+            onDeleteSuccess(eventToDelete);
+            setShowConfirm(false);
+            setSelectedEvent(null);
+            alert(response.data.message);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    const handleDeleteEvent = (id) => {
+        setEventToDelete(id);
+        setShowConfirm(true);
     };
     return (
         <div className="week-view">
             <div className="week-header-grid">
                 <div className="time-col-spacer"></div>
-                {weekDays.map((day) => (
-                    <div
-                        key={day.toISOString()}
-                        className={`day-header ${isToday(day) ? "active" : ""}`}
-                    >
-                        <span className="day-name">{format(day, "EEE")}</span>
-                        <span className="day-num">{format(day, "d")}</span>
-                    </div>
-                ))}
+                <div className="day-headers">
+                    {weekDays.map((day) => (
+                        <div
+                            key={day.toISOString()}
+                            className={`day-header ${isToday(day) ? "active" : ""}`}
+                        >
+                            <span className="day-name">
+                                {format(day, "EEE")}
+                            </span>
+                            <span className="day-num">{format(day, "d")}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             <div className="week-time-grid">
@@ -65,6 +156,11 @@ const WeekView = ({ currentDate, events, onSlotClick, currentTime }) => {
                         </div>
                         <div className="time-slots">
                             {weekDays.map((day) => {
+                                const slotStart = new Date(day);
+                                slotStart.setHours(hour, 0, 0, 0);
+
+                                const slotEnd = new Date(day);
+                                slotEnd.setHours(hour + 1, 0, 0, 0);
                                 const slotEvents = getEventsForSlot(day, hour);
                                 return (
                                     <div
@@ -76,9 +172,16 @@ const WeekView = ({ currentDate, events, onSlotClick, currentTime }) => {
                                     >
                                         {slotEvents.map((event) => {
                                             const isStartHour =
-                                                new Date(
-                                                    event.start_date,
-                                                ).getHours() === hour;
+                                                event.recurrence === "none"
+                                                    ? new Date(
+                                                          event.start_date,
+                                                      ) >= slotStart &&
+                                                      new Date(
+                                                          event.start_date,
+                                                      ) < slotEnd
+                                                    : new Date(
+                                                          event.start_date,
+                                                      ).getHours() === hour;
                                             return (
                                                 <div
                                                     key={event.id}
@@ -143,12 +246,30 @@ const WeekView = ({ currentDate, events, onSlotClick, currentTime }) => {
                             className={`popover-header cat-${selectedEvent.category}`}
                         >
                             <h3>{selectedEvent.title}</h3>
-                            <button
-                                className="close-btn"
-                                onClick={() => setSelectedEvent(null)}
-                            >
-                                <FaTimes />
-                            </button>
+                            <div className="action-btn">
+                                <button
+                                    className="edit-btn"
+                                    onClick={() =>
+                                        handleEditEvent(selectedEvent)
+                                    }
+                                >
+                                    <FaPencilAlt></FaPencilAlt>
+                                </button>
+                                <button
+                                    className="delete-btn"
+                                    onClick={() =>
+                                        handleDeleteEvent(selectedEvent.id)
+                                    }
+                                >
+                                    <FaRegTrashAlt></FaRegTrashAlt>
+                                </button>
+                                <button
+                                    className="close-btn"
+                                    onClick={() => setSelectedEvent(null)}
+                                >
+                                    <FaTimes />
+                                </button>
+                            </div>
                         </header>
 
                         <main className="popover-body">
@@ -180,7 +301,9 @@ const WeekView = ({ currentDate, events, onSlotClick, currentTime }) => {
                                     <span
                                         className={`badge cat-${selectedEvent.category}`}
                                     >
-                                        {selectedEvent.category}
+                                        {CATEGORY_VIETSUB[
+                                            selectedEvent.category
+                                        ] || "Khác"}
                                     </span>
                                 </div>
                             </div>
@@ -191,7 +314,9 @@ const WeekView = ({ currentDate, events, onSlotClick, currentTime }) => {
                                         <FaRedo className="info-icon" />
                                         <div className="info-text">
                                             <strong>Lặp lại:</strong>{" "}
-                                            {selectedEvent.recurrence}
+                                            {RECURRENCE_VIETSUB[
+                                                selectedEvent.recurrence
+                                            ] || "Không lặp lại"}
                                         </div>
                                     </div>
                                 )}
@@ -210,6 +335,35 @@ const WeekView = ({ currentDate, events, onSlotClick, currentTime }) => {
                     </div>
                 </div>
             )}
+            <Modal
+                show={showConfirm}
+                onHide={() => setShowConfirm(false)}
+                centered // Cho nó nằm ngay chính giữa màn hình
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Xác nhận xóa sự kiện</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Bạn có chắc chắn muốn xóa sự kiện này không? Hành động này
+                    không thể hoàn tác.
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowConfirm(false)}
+                    >
+                        Hủy
+                    </Button>
+                    <Button
+                        variant="danger"
+                        onClick={() => {
+                            handleDelete();
+                        }}
+                    >
+                        Có, xóa ngay!
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };

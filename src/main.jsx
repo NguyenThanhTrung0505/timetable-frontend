@@ -10,6 +10,7 @@ import ForgetPassword from "./components/forgetPassword/forgetPassword.jsx";
 import ResetPassword from "./components/resetPassword/resetPassword.jsx";
 import Home from "./components/home/home.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import "bootstrap/dist/css/bootstrap.min.css";
 ReactDOM.createRoot(root).render(
     <BrowserRouter>
         <Routes>

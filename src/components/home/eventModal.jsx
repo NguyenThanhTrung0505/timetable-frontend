@@ -3,8 +3,10 @@ import { FaTimes } from "react-icons/fa";
 import { format, addHours } from "date-fns";
 import "./home.scss";
 import "./eventModal.scss";
-const EventModal = ({ onClose, onSubmit, selectedSlot }) => {
+
+const EventModal = ({ onClose, onSubmit, selectedSlot, initialData }) => {
     const [formData, setFormData] = useState({
+        id: null,
         title: "",
         category: "work",
         description: "",
@@ -14,20 +16,35 @@ const EventModal = ({ onClose, onSubmit, selectedSlot }) => {
     });
 
     useEffect(() => {
-        if (selectedSlot) {
-            const start = new Date(selectedSlot.date);
-            start.setHours(selectedSlot.hour, 0, 0, 0);
+        if (initialData) {
+            const start = new Date(initialData.start_date.replace(" ", "T"));
+            const end = new Date(initialData.end_date.replace(" ", "T"));
 
-            const end = addHours(start, 1);
-
-            setFormData((prev) => ({
-                ...prev,
-
+            setFormData({
+                id: initialData.id,
+                title: initialData.title || "",
+                category: initialData.category || "work",
+                description: initialData.description || "",
                 startDate: format(start, "yyyy-MM-dd'T'HH:mm"),
                 endDate: format(end, "yyyy-MM-dd'T'HH:mm"),
-            }));
+                recurrence: initialData.recurrence || "none",
+            });
+        } else if (selectedSlot) {
+            const start = new Date(selectedSlot.date);
+            start.setHours(selectedSlot.hour, 0, 0, 0);
+            const end = addHours(start, 1);
+
+            setFormData({
+                id: null,
+                title: "",
+                category: "work",
+                description: "",
+                startDate: format(start, "yyyy-MM-dd'T'HH:mm"),
+                endDate: format(end, "yyyy-MM-dd'T'HH:mm"),
+                recurrence: "none",
+            });
         }
-    }, [selectedSlot]);
+    }, [selectedSlot, initialData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -55,7 +72,7 @@ const EventModal = ({ onClose, onSubmit, selectedSlot }) => {
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="modal-header">
-                    <h2>Tạo sự kiện</h2>
+                    <h2>{initialData ? "Chỉnh sửa sự kiện" : "Tạo sự kiện"}</h2>
                     <button onClick={onClose} className="close-btn">
                         <FaTimes />
                     </button>
@@ -147,7 +164,7 @@ const EventModal = ({ onClose, onSubmit, selectedSlot }) => {
                             Đóng
                         </button>
                         <button type="submit" className="btn-submit">
-                            Lưu
+                            {initialData ? "Lưu thay đổi" : "Tạo sự kiện"}
                         </button>
                     </div>
                 </form>

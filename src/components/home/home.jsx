@@ -38,12 +38,55 @@ const Home = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [events, setEvents] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const [editingEvent, setEditingEvent] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [userInfo, setUserInfo] = useState({});
     const profileMenuRef = useRef(null);
     const navigate = useNavigate();
+
     const fetchEvents = async () => {
+        try {
+            const token = localStorage.getItem("myToken");
+            if (view === "week") {
+                let dayStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+                let dayEnd = addDays(dayStart, 6);
+                let formattedStart = format(dayStart, "yyyy-MM-dd HH:mm:ss");
+                let formattedEnd = format(dayEnd, "yyyy-MM-dd HH:mm:ss");
+                let response = await axios.get(
+                    `${import.meta.env.VITE_API_URL}/event/week?startDate=${formattedStart}&endDate=${formattedEnd}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    },
+                );
+                setEvents(response.data.data);
+            } else {
+                console.log(currentDate);
+                let endDayMonth = endOfMonth(currentDate);
+                let startDayMonth = startOfMonth(currentDate);
+                let formattedStart = format(
+                    startDayMonth,
+                    "yyyy-MM-dd HH:mm:ss",
+                );
+                let formattedEnd = format(endDayMonth, "yyyy-MM-dd HH:mm:ss");
+                let response = await axios.get(
+                    `${import.meta.env.VITE_API_URL}/event/week?startDate=${formattedStart}&endDate=${formattedEnd}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    },
+                );
+                setEvents(response.data.data);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    const fetchUserInfo = async () => {
         try {
             const token = localStorage.getItem("myToken");
             const response = await axios.get(
@@ -54,14 +97,21 @@ const Home = () => {
                     },
                 },
             );
-            setEvents(response.data.data);
+            setUserInfo(response.data.data);
         } catch (error) {
             console.log(error);
         }
     };
     useEffect(() => {
         fetchEvents();
+        fetchUserInfo();
     }, []);
+    useEffect(() => {
+        fetchEvents();
+    }, [view]);
+    useEffect(() => {
+        fetchEvents();
+    }, [currentDate]);
     useEffect(() => {
         if (isDark) {
             document.body.classList.add("dark-theme");
@@ -103,8 +153,11 @@ const Home = () => {
             );
         }
     };
+    const handleRemoveEventFromUI = (deletedId) => {
+        setEvents((prevEvents) => prevEvents.filter((e) => e.id !== deletedId));
+    };
     const handleCreateEvent = async (e) => {
-        if (!selectedSlot) return;
+        if (!selectedSlot && !e.id) return;
         const payload = {
             title: e.title,
             start: e.startDate,
@@ -115,20 +168,31 @@ const Home = () => {
         };
         try {
             const token = localStorage.getItem("myToken");
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/event/create-event`,
-                payload,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                },
-            );
+            const config = {
+                headers: { Authorization: `Bearer ${token}` },
+            };
+            let response;
+            if (e.id) {
+                response = await axios.put(
+                    `${import.meta.env.VITE_API_URL}/event/update-event/${e.id}`,
+                    payload,
+                    config,
+                );
+            } else {
+                response = await axios.post(
+                    `${import.meta.env.VITE_API_URL}/event/create-event`,
+                    payload,
+                    config,
+                );
+            }
             if (response.status === 200 || response.status === 201) {
-                console.log("Thêm thành công");
+                console.log(
+                    e.id ? "Cập nhật thành công" : "Thêm mới thành công",
+                );
                 await fetchEvents();
                 setShowModal(false);
                 setSelectedSlot(null);
+                setEditingEvent(null);
             }
         } catch (error) {
             console.error(
@@ -220,11 +284,11 @@ const Home = () => {
                                 <div className="profile-menu animate-slide-up">
                                     <div className="user-info">
                                         <strong>
-                                            {events[0]?.name ||
+                                            {userInfo.name ||
                                                 "Đang cập nhật..."}
                                         </strong>
                                         <span>
-                                            {events[0]?.email ||
+                                            {userInfo.email ||
                                                 "Đang cập nhật..."}
                                         </span>
                                     </div>
@@ -260,6 +324,11 @@ const Home = () => {
                                 setShowModal(true);
                             }}
                             currentTime={currentTime}
+                            onDeleteSuccess={handleRemoveEventFromUI}
+                            onEditClick={(eventData) => {
+                                setEditingEvent(eventData);
+                                setShowModal(true);
+                            }}
                         />
                     ) : (
                         <MonthView
@@ -278,9 +347,11 @@ const Home = () => {
                         onClose={() => {
                             setShowModal(false);
                             setSelectedSlot(null);
+                            setEditingEvent(null);
                         }}
                         onSubmit={handleCreateEvent}
                         selectedSlot={selectedSlot}
+                        initialData={editingEvent}
                     />
                 )}
             </div>

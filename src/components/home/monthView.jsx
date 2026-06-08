@@ -1,12 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
     startOfMonth,
     startOfWeek,
     addDays,
-    isSameDay,
     isSameMonth,
     isToday,
     format,
+    startOfDay,
+    endOfDay,
 } from "date-fns";
 import { FaTimes, FaPlus } from "react-icons/fa";
 import "./home.scss";
@@ -18,19 +19,41 @@ const MonthView = ({ currentDate, events, onDayClick }) => {
     const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
     const days = Array.from({ length: 35 }, (_, i) => addDays(startDate, i));
 
-    const selectedDayEvents = selectedDay
-        ? events.filter((e) => isSameDay(new Date(e.start_date), selectedDay))
-        : [];
-    const eventsByDate = useMemo(() => {
-        return events.reduce((acc, event) => {
-            const dateKey = format(new Date(event.start_date), "yyyy-MM-dd");
-            if (!acc[dateKey]) {
-                acc[dateKey] = [];
+    const getEventsForDay = (targetDay) => {
+        const targetStart = startOfDay(targetDay);
+        const targetEnd = endOfDay(targetDay);
+
+        return events.filter((event) => {
+            const eventStart = new Date(event.start_date);
+            const eventEnd = new Date(event.end_date);
+
+            if (eventStart > targetEnd) return false;
+
+            if (event.recurrence === "none" || !event.recurrence) {
+                return eventStart <= targetEnd && eventEnd >= targetStart;
             }
-            acc[dateKey].push(event);
-            return acc;
-        }, {});
-    }, [events]);
+
+            if (event.recurrence === "daily") {
+                return true;
+            }
+
+            if (event.recurrence === "weekly") {
+                return eventStart.getDay() === targetDay.getDay();
+            }
+
+            if (
+                event.recurrence === "monthly" ||
+                event.recurrence === "yearly"
+            ) {
+                return eventStart.getDate() === targetDay.getDate();
+            }
+
+            return false;
+        });
+    };
+
+    const selectedDayEvents = selectedDay ? getEventsForDay(selectedDay) : [];
+
     return (
         <div className="month-view">
             <div className="month-header-grid">
@@ -45,9 +68,7 @@ const MonthView = ({ currentDate, events, onDayClick }) => {
 
             <div className="month-days-grid">
                 {days.map((day) => {
-                    const dayEvents = events.filter((e) =>
-                        isSameDay(new Date(e.start_date), day),
-                    );
+                    const dayEvents = getEventsForDay(day);
                     const isCurrentMonth = isSameMonth(day, currentDate);
 
                     return (

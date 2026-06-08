@@ -236,6 +236,15 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
 // --- Week View ---
 .week-view {
     min-width: 800px;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    overflow-x: auto;
+    position: relative;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
     .event-detail-overlay {
         position: fixed;
         top: 0;
@@ -246,7 +255,7 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 999; /* Luôn nổi trên cùng hệ thống */
+        z-index: 900; /* Luôn nổi trên cùng hệ thống */
         backdrop-filter: blur(2px); /* Làm mờ nhẹ phần nền phía sau */
     }
 
@@ -275,22 +284,43 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
                 max-width: 85%;
                 word-wrap: break-word;
             }
-
-            .close-btn {
-                background: none;
-                border: none;
-                color: #ffffff;
-                font-size: 1.1rem;
-                cursor: pointer;
-                opacity: 0.8;
-                transition: opacity 0.2s;
+            .action-btn {
                 display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 4px;
-
-                &:hover {
-                    opacity: 1;
+                gap: 1rem;
+                .edit-btn,
+                .delete-btn,
+                .close-btn {
+                    background: none;
+                    border: none;
+                    // color: #ffffff;
+                    font-size: 1.1rem;
+                    cursor: pointer;
+                    opacity: 0.8;
+                    transition: opacity 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 4px;
+                    &:hover {
+                        opacity: 1;
+                    }
+                }
+                .edit-btn {
+                    &:hover {
+                        color: $cat-wellness-text;
+                    }
+                }
+                .delete-btn {
+                    &:hover {
+                        color: $cat-meeting-text;
+                    }
+                }
+                .close-btn {
+                    &:hover {
+                        color: white;
+                        background-color: red;
+                        border-radius: 0.5rem;
+                    }
                 }
             }
 
@@ -413,36 +443,43 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
     }
     .week-header-grid {
         display: grid;
-        grid-template-columns: 60px repeat(7, 1fr);
-        gap: 0.75rem;
+        grid-template-columns: 60px 1fr;
         margin-bottom: 1rem;
-
-        .day-header {
-            text-align: center;
-            padding: 0.75rem;
-            border-radius: 1.5rem;
-            border: 1px solid transparent;
-            box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-
-            .day-name {
-                display: block;
-                font-size: 0.8rem;
-                color: $text-muted;
-                margin-bottom: 0.25rem;
-            }
-            .day-num {
-                display: block;
-                font-size: 1.25rem;
-                font-weight: 600;
-            }
-
-            &.active {
-                background: $primary-blue;
-                color: white;
-                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        position: sticky;
+        top: 0;
+        z-index: 800;
+        .day-headers {
+            background-color: #ffffff;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem;
+            .day-header {
+                text-align: center;
+                padding: 0.75rem;
+                border-radius: 1.5rem;
+                border: 1px solid transparent;
+                box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
 
                 .day-name {
-                    color: rgba(255, 255, 255, 0.8);
+                    display: block;
+                    font-size: 0.8rem;
+                    color: $text-muted;
+                    margin-bottom: 0.25rem;
+                }
+                .day-num {
+                    display: block;
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                }
+
+                &.active {
+                    background: $primary-blue;
+                    color: white;
+                    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+
+                    .day-name {
+                        color: rgba(255, 255, 255, 0.8);
+                    }
                 }
             }
         }
@@ -551,6 +588,7 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
 .cat-focus {
     background: $cat-focus;
     color: $cat-focus-text;
+    // border: 1px solid #fdd47a;
 }
 .cat-wellness {
     background: $cat-wellness;
@@ -594,7 +632,7 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 50;
+    z-index: 1001;
     padding: 1rem;
 
     .modal-content {
@@ -697,7 +735,6 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
         }
     }
 }
-// Thêm đoạn này vào file SCSS của bạn
 
 .month-view {
     width: 100%;
@@ -897,7 +934,7 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         border: 1px solid #f3f4f6;
         padding: 0.5rem;
-        z-index: 100;
+        z-index: 1100;
 
         .user-info {
             padding: 0.75rem 1rem;
@@ -989,7 +1026,6 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
             padding-right: 0.5rem !important;
             border-right: 1px solid $border-color;
         }
-
         // Cố định ô góc trên cùng bên trái
         .week-header-grid .time-col-spacer {
             position: sticky;
