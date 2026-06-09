@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import WeekView from "./WeekView";
-import MonthView from "./MonthView";
-import EventModal from "./EventModal";
+import WeekView from "./weekView";
+import MonthView from "./monthView";
+import EventModal from "./eventModal";
 import axios from "axios";
 import { toast } from "react-toastify";
 import {
