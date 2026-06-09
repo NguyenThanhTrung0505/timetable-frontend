@@ -998,7 +998,7 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
 
         .header-right {
             justify-content: space-between;
-            overflow-x: auto; // Cho phép cuộn ngang bộ nút bấm nếu màn hình quá nhỏ
+            // overflow-x: auto; // Cho phép cuộn ngang bộ nút bấm nếu màn hình quá nhỏ
             padding-bottom: 0.5rem;
 
             .add-event-btn span {
@@ -1192,7 +1192,15 @@ $cat-wellness-header: linear-gradient(135deg, #34d399, #059669);
                 flex: 0 0 auto;
                 margin-top: 0.5rem;
             }
-
+            .profile-dropdown-container {
+                position: relative;
+                .profile-btn {
+                    border-radius: 50%;
+                }
+                .profile-menu {
+                    left: 0;
+                }
+            }
             // Quy hoạch lại 3 nút thành hình tròn đều tăm tắp
             .theme-toggle,
             .profile-btn,

@@ -40,6 +40,5 @@ ReactDOM.createRoot(root).render(
             theme="light"
             transition={Bounce}
         />
-        ,
     </>,
 );
