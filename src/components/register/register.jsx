@@ -3,6 +3,7 @@ import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import "./register.scss";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 const Register = () => {
     const [formData, setFormData] = useState({
         fullName: "",
@@ -40,13 +41,18 @@ const Register = () => {
             );
             if (response.data.success) {
                 localStorage.setItem("myToken", response.data.token);
-                navigate("/home");
+                toast.success(`Login success với: ${formData.email}`);
+                setTimeout(() => {
+                    navigate("/home");
+                }, 1500);
             }
         } catch (error) {
             if (error.response && error.response.data) {
                 setError(error.response.data.message);
+                localStorage.clear();
             } else {
                 setError("Lỗi kết nối đến server. Vui lòng thử lại sau.");
+                localStorage.clear();
             }
         } finally {
             setIsLoading(false);

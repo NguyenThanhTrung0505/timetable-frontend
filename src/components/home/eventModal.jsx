@@ -3,6 +3,7 @@ import { FaTimes } from "react-icons/fa";
 import { format, addHours } from "date-fns";
 import "./home.scss";
 import "./eventModal.scss";
+import { toast } from "react-toastify";
 
 const EventModal = ({ onClose, onSubmit, selectedSlot, initialData }) => {
     const [formData, setFormData] = useState({
@@ -58,7 +59,7 @@ const EventModal = ({ onClose, onSubmit, selectedSlot, initialData }) => {
         e.preventDefault();
 
         if (new Date(formData.endDate) <= new Date(formData.startDate)) {
-            alert("Thời gian kết thúc phải sau thời gian bắt đầu!");
+            toast.error("Thời gian kết thúc phải sau thời gian bắt đầu!");
             return;
         }
 

@@ -3,6 +3,7 @@ import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import "./login.scss";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -27,8 +28,10 @@ const Login = () => {
             );
             if (response.data.success) {
                 localStorage.setItem("myToken", response.data.token);
-                console.log("Login success với:", email);
-                navigate("/home");
+                toast.success(`Login success với: ${email}`);
+                setTimeout(() => {
+                    navigate("/home");
+                }, 1500);
             }
         } catch (error) {
             if (error.response && error.response.data) {

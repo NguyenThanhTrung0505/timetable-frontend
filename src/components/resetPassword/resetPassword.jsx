@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaLock, FaEye, FaEyeSlash, FaCheckCircle } from "react-icons/fa";
 import "./resetPassword.scss";
+import { toast } from "react-toastify";
 
 const ResetPassword = () => {
     const [password, setPassword] = useState("");
@@ -41,7 +42,7 @@ const ResetPassword = () => {
         setTimeout(() => {
             setIsLoading(false);
             setIsSuccess(true);
-            console.log("Cập nhật mật khẩu thành công với token:", token);
+            toast.success("Cập nhật mật khẩu thành công với token:", token);
         }, 1500);
     };
 

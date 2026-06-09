@@ -4,6 +4,7 @@ import WeekView from "./WeekView";
 import MonthView from "./MonthView";
 import EventModal from "./EventModal";
 import axios from "axios";
+import { toast } from "react-toastify";
 import {
     FaCalendarAlt,
     FaRegClock,
@@ -64,7 +65,6 @@ const Home = () => {
                 );
                 setEvents(response.data.data);
             } else {
-                console.log(currentDate);
                 let endDayMonth = endOfMonth(currentDate);
                 let startDayMonth = startOfMonth(currentDate);
                 let formattedStart = format(
@@ -83,7 +83,7 @@ const Home = () => {
                 setEvents(response.data.data);
             }
         } catch (error) {
-            console.log(error);
+            toast.error(error);
         }
     };
     const fetchUserInfo = async () => {
@@ -99,7 +99,7 @@ const Home = () => {
             );
             setUserInfo(response.data.data);
         } catch (error) {
-            console.log(error);
+            toast.error(error);
         }
     };
     useEffect(() => {
@@ -155,6 +155,7 @@ const Home = () => {
     };
     const handleRemoveEventFromUI = (deletedId) => {
         setEvents((prevEvents) => prevEvents.filter((e) => e.id !== deletedId));
+        toast.success("Đã xóa thành công");
     };
     const handleCreateEvent = async (e) => {
         if (!selectedSlot && !e.id) return;
@@ -186,16 +187,16 @@ const Home = () => {
                 );
             }
             if (response.status === 200 || response.status === 201) {
-                console.log(
-                    e.id ? "Cập nhật thành công" : "Thêm mới thành công",
-                );
-                await fetchEvents();
+                (e.id
+                    ? toast.success("Cập nhật thành công")
+                    : toast.success("Thêm mới thành công"),
+                    await fetchEvents());
                 setShowModal(false);
                 setSelectedSlot(null);
                 setEditingEvent(null);
             }
         } catch (error) {
-            console.error(
+            toast.error(
                 "Lỗi thêm sự kiện:",
                 error.response?.data || error.message,
             );
@@ -205,6 +206,32 @@ const Home = () => {
         localStorage.clear();
         navigate("/login");
     };
+    if (!userInfo.name || !userInfo.email) {
+        return (
+            <div
+                aria-label="Orange and tan hamster running in a metal wheel"
+                role="img"
+                class="wheel-and-hamster"
+            >
+                <div class="wheel"></div>
+                <div class="hamster">
+                    <div class="hamster__body">
+                        <div class="hamster__head">
+                            <div class="hamster__ear"></div>
+                            <div class="hamster__eye"></div>
+                            <div class="hamster__nose"></div>
+                        </div>
+                        <div class="hamster__limb hamster__limb--fr"></div>
+                        <div class="hamster__limb hamster__limb--fl"></div>
+                        <div class="hamster__limb hamster__limb--br"></div>
+                        <div class="hamster__limb hamster__limb--bl"></div>
+                        <div class="hamster__tail"></div>
+                    </div>
+                </div>
+                <div class="spoke"></div>
+            </div>
+        );
+    }
     return (
         <div className={`home-container ${isDark ? "dark" : ""}`}>
             <div className="background-mesh" />

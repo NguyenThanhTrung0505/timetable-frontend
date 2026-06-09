@@ -13,6 +13,7 @@ import {
     FaRegTrashAlt,
 } from "react-icons/fa";
 import axios from "axios";
+import { toast } from "react-toastify";
 const WeekView = ({
     currentDate,
     events,
@@ -120,9 +121,8 @@ const WeekView = ({
             onDeleteSuccess(eventToDelete);
             setShowConfirm(false);
             setSelectedEvent(null);
-            alert(response.data.message);
         } catch (error) {
-            console.log(error);
+            toast.error(error);
         }
     };
     const handleDeleteEvent = (id) => {
