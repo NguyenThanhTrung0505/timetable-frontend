@@ -21,12 +21,12 @@ ReactDOM.createRoot(root).render(
                 <Route path="/forget-password" element={<ForgetPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route element={<ProtectedRoute />}>
-                    <Route path="/" element={<App />}></Route>
+                    <Route path="/" element={<Navigate to="/home" replace />} />
                     <Route path="/home" element={<Home />} />
                 </Route>
+                <Route path="*" element={<h1>404 - Trang không tồn tại</h1>} />
             </Routes>
         </BrowserRouter>
-        ,
         <ToastContainer
             position="top-right"
             autoClose={4000}
